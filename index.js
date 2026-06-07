@@ -1,29 +1,8 @@
 const http = require("http");
 const WebSocket = require("ws");
-const { PORT, HTTP_PORT, streamIntervals, log } = require("./config");
+const { PORT, streamIntervals, log } = require("./config");
 const { handleMessage } = require("./handlers");
 const { startAllStreams } = require("./streams");
-
-// --- WebSocket Server ---
-
-const wss = new WebSocket.Server({ port: PORT });
-
-wss.on("connection", (socket) => {
-  log("Client connected");
-
-  socket.clientData = {
-    subscriptions: new Map(), // Map<channelName, Set<symbol>>
-    candles: new Map(),       // Map<"resolution:symbol", candleState>
-  };
-
-  socket.on("message", (raw) => handleMessage(socket, raw));
-
-  socket.on("close", () => {
-    log("Client disconnected");
-  });
-});
-
-startAllStreams(wss);
 
 // --- HTTP API for runtime config ---
 
@@ -92,9 +71,35 @@ const httpServer = http.createServer((req, res) => {
   res.end(JSON.stringify({ error: "Not found" }));
 });
 
-httpServer.listen(HTTP_PORT);
+// --- WebSocket Server ---
+
+const wss = new WebSocket.Server({
+  server: httpServer,
+});
+
+wss.on("connection", (socket) => {
+  log("Client connected");
+
+  socket.clientData = {
+    subscriptions: new Map(), // Map<channelName, Set<symbol>>
+    candles: new Map(),       // Map<"resolution:symbol", candleState>
+  };
+
+  socket.on("message", (raw) => handleMessage(socket, raw));
+
+  socket.on("close", () => {
+    log("Client disconnected");
+  });
+});
+
+startAllStreams(wss);
+
+
+
+httpServer.listen(PORT, () => {
+  log(`Server running on port ${PORT}`);
+});
 
 log(`Server started on ws://localhost:${PORT}`);
-log(`HTTP API on http://localhost:${HTTP_PORT}/intervals`);
 log("Channels: all_trades, candlestick_<res>, l2_orderbook, v2/ticker");
 log('Send: {"type":"subscribe","payload":{"channels":[{"name":"all_trades","symbols":["BTCUSD"]}]}}');
