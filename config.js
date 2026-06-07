@@ -1,5 +1,4 @@
-const PORT = 8080;
-const HTTP_PORT = 3000;
+const PORT = process.env.PORT || 8080;
 
 // Symbol definitions: price range, decimal precision, tick size for orderbook spread
 const SYMBOLS = {
@@ -67,7 +66,6 @@ const log = (message) => {
 
 module.exports = {
   PORT,
-  HTTP_PORT,
   SYMBOLS,
   VALID_SYMBOLS,
   RESOLUTION_MS,
