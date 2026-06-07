@@ -2,6 +2,8 @@
 
 A WebSocket server for stress testing crypto trading frontends. Streams realistic market data at configurable high frequencies.
 
+## Live : https://socket-custom-load-main-production.up.railway.app/intervals
+
 ## Setup
 
 ```bash
